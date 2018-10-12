@@ -8,6 +8,8 @@ from flask_pagedown import PageDown
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from config import config
+import pymysql
+pymysql.install_as_MySQLdb()
 
 bootstrap = Bootstrap()
 mail = Mail()
