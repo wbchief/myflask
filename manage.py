@@ -3,9 +3,14 @@ from flask_script import Manager
 from flask_script import Shell
 
 from app import create_app, db
-from app.models import User, Role, Post
+from app.models import User, Role, Post, Permission
 
 app = create_app('testing')
+
+@app.context_processor
+def include_permission_class():
+    return {'Permission': Permission}
+
 manager = Manager(app)
 migrate = Migrate(app, db)
 
