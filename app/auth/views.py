@@ -11,16 +11,26 @@ from werkzeug.utils import redirect
 from app.auth import auth
 from app import create_app, db
 from app.auth.form import LoginForm, RegisterationForm, ChangePasswordForm, PasswordResetRequestForm, \
-    PasswordResetForm
+    PasswordResetForm, ChangeEmailForm
 from app.emails import send_email
-from app.models import User
+from app.models import User, Permission
 
 app = create_app('testing')
 
+@app.context_processor
+def include_permission_class():
+    return {'Permission': Permission}
+
+@app.route('/')
+def index():
+    return '<h2> 欢迎 </h2>'
+
 @auth.before_app_request
 def before_request():
-    if current_user.is_authenticated and not current_user.confirmed and request.endpoint and request.blueprint != 'auth' and request.endpoint != 'static':
-        return redirect(url_for('auth.unconfirmed'))
+    if current_user.is_authenticated: # 判断用户是否登录
+        current_user.ping()
+        if not current_user.confirmed and request.endpoint and request.blueprint != 'auth' and request.endpoint != 'static':
+            return redirect(url_for('auth.unconfirmed'))
 
 @auth.route('/unconfirmed')
 def unconfirmed():
@@ -83,6 +93,7 @@ def confirm(token):
     :return:
     '''
     if current_user.confirmed:
+        print(current_user.email)
         return redirect(url_for('main.index'))
     if current_user.confirm(token):
         db.session.commit()
@@ -148,6 +159,37 @@ def password_reset(token):
             return redirect(url_for('main.index'))
     return render_template('auth/password_reset.html', form=form)
 
+@auth.route('/change_email', methods=['GET', 'POST'])
+@login_required
+def change_email_request():
+    form = ChangeEmailForm()
+    if form.validate_on_submit():
+        if current_user.verify_password(form.password.data):
+            new_email = form.email.data
+            token = current_user.generate_email_change_token(new_email)
+            send_email(new_email, '请确认你的邮箱地址', 'auth/email/change_email', user=current_user, token=token)
+            flash('一封带有确认你新邮箱地址说明的邮件已经发送给你')
+            return redirect(url_for('main.index'))
+        else:
+            flash('不合法的邮箱或密码')
+    return render_template('auth/change_email.html', form=form)
+
+@auth.route('/change_email/<token>')
+@login_required
+def change_email(token):
+    '''
+
+    :param token:
+    :return:
+    '''
+    if current_user.change_email(token):
+        db.session.commit()
+        flash('你的邮箱已经修改')
+    else:
+        flash('不合法的请求')
+    return render_template(url_for('main.index'))
+
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='9000')
+    app.run(host='0.0.0.0', port='5000')

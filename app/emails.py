@@ -16,7 +16,12 @@ def send_async_email(app, msg):
     :return:
     '''
     with app.app_context():
-        mail.send(msg)
+        try:
+
+            mail.send(msg)
+        except Exception as e:
+            mail.send(msg)
+
         print('发送成功')
 
 

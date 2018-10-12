@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate, MigrateCommand
 from flask_moment import Moment
+from flask_pagedown import PageDown
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from config import config
@@ -12,6 +13,7 @@ bootstrap = Bootstrap()
 mail = Mail()
 moment = Moment()
 db = SQLAlchemy()
+pagedown = PageDown()
 
 login_manager = LoginManager()
 # 用户安全等级
@@ -30,6 +32,7 @@ def create_app(config_name):
     moment.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
+    pagedown.init_app(app)
 
     from app.main import main as main_blueprint
     app.register_blueprint(main_blueprint, url_prefix='/main')
