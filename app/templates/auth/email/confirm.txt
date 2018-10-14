@@ -1,13 +1,12 @@
-Dear {{ user.username }},
+尊敬的 {{ user.username }},
 
-Welcome to Flasky!
+欢迎你来到平梵世界!
 
-To confirm your account please click on the following link:
+请点击下面的链接来确认你的账户:
 
 {{ url_for('auth.confirm', token=token, _external=True) }}
 
-Sincerely,
+帅气的:
+平梵
 
-The Flasky Team
-
-Note: replies to this email address are not monitored.
+注: 这封邮件的回复地址不受监控

@@ -40,34 +40,45 @@ def unconfirmed():
 
 @auth.route('/login/', methods=['GET', 'POST'])
 def login():
+    '''
+    登录，
+    :return:
+    '''
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        print(user)
         if user is not None and user.verify_password(form.password.data):
+            # 在用户会话中标记用户已登陆
             login_user(user, form.remeber_me.data)
             next = request.args.get('next')
-            # print(1, next)
+            print(1, next)
             if next is None or not next.startswith('/'):
                 next = url_for('main.index')
                 # print(2, next)
                 # print(3, next)
             return redirect(next)
-        flash('Invalid username or password')
-        print('Invalid username or password')
+        flash('你的用户名或密码好像有点问题哦')
     return render_template('auth/login.html', form=form)
 
 @auth.route('/logout')
 @login_required
 def logout():
-    logout_user()
-    flash('You have been logged out.')
-    print('You have been logged out.')
+    '''
+    退出
+    :return:
+    '''
+    logout_user() #删除并重设会话
+    flash('你已经退出喽.')
+    #print('You have been logged out.')
     return redirect(url_for('main.index'))
 
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
+    '''
+    用户注册，并给所注册email发送验证邮件
+    :return:
+    '''
     form = RegisterationForm()
     if form.validate_on_submit():
         user = User(email=form.email.data,
@@ -76,11 +87,10 @@ def register():
         db.session.add(user)
         db.session.commit()
         token = user.generate_confirmation_token()
-        send_email(user.email, 'Confirm Your Account',
+        send_email(user.email, '请确认你的帐号',
                    'auth/email/confirm', user=user, token=token)
 
-        flash('A confirmation email has been sent to you by email.')
-        print('A confirmation email has been sent to you by email.')
+        flash('一封确认邮件已经发到你的邮箱喽，请注意查收呀.')
         return redirect(url_for('auth.login'))
     return render_template('auth/register.html', form=form)
 
@@ -97,11 +107,11 @@ def confirm(token):
         return redirect(url_for('main.index'))
     if current_user.confirm(token):
         db.session.commit()
-        flash('You have confirmed your account. Thanks!')
-        print('You have confirmed your account. Thanks!')
+        flash('你已经验证完喽. 谢谢!')
+        #print('You have confirmed your account. Thanks!')
     else:
-        flash('The confirmation link is invalied or has expired')
-        print('The confirmation link is invalied or has expired')
+        flash('确认链接无效或已过期')
+        #print('The confirmation link is invalied or has expired')
     return redirect(url_for('main.index'))
 
 
@@ -137,15 +147,15 @@ def password_reset_request():
             token = user.generate_reset_token()
             send_email(user.email, '重置你的密码',
                        'auth/email/reset_password', user=user, token=token)
-        flash('An email with instructions to reset your password has been sent to you')
-        print('An email with instructions to reset your password has been sent to you')
+        flash('一封指示重置密码的电子邮件已经发送给你')
+        #print('An email with instructions to reset your password has been sent to you')
         return redirect(url_for('auth.login'))
     return render_template('auth/password_reset.html', form=form)
 
 
 @auth.route('/reset/<token>', methods=['GET', 'POST'])
 def password_reset(token):
-    print('1111111111111111111111111111111111111111111111111111111111111')
+   #print('1111111111111111111111111111111111111111111111111111111111111')
     if not current_user.is_anonymous:
         return redirect(url_for('main.index'))
     form = PasswordResetForm()
@@ -153,7 +163,7 @@ def password_reset(token):
         if User.reset_password(token, form.password.data):
             db.session.commit()
             flash('你的密码已经重置')
-            print('你的密码已经重置')
+            #print('你的密码已经重置')
             return redirect(url_for('auth.login'))
         else:
             return redirect(url_for('main.index'))
